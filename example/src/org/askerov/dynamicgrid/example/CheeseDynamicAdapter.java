@@ -30,7 +30,7 @@ public class CheeseDynamicAdapter extends BaseDynamicGridAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         CheeseViewHolder holder;
         if (convertView == null) {
-            convertView = LayoutInflater.from(getContext()).inflate(R.layout.item_grid, null);
+            convertView = LayoutInflater.from(getContext()).inflate(R.layout.card_item, null);
             holder = new CheeseViewHolder(convertView);
             convertView.setTag(holder);
         } else {
@@ -45,8 +45,8 @@ public class CheeseDynamicAdapter extends BaseDynamicGridAdapter {
         private ImageView image;
 
         private CheeseViewHolder(View view) {
-            titleText = (TextView) view.findViewById(R.id.item_title);
-            image = (ImageView) view.findViewById(R.id.item_img);
+            titleText = (TextView) view.findViewById(R.id.product_card_text);
+            image = (ImageView) view.findViewById(R.id.product_card_image);
         }
 
         void build(String title) {

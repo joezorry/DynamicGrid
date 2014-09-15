@@ -53,7 +53,7 @@ public class DynamicGridView extends GridView {
 
     private long mMobileItemId = INVALID_ID;
 
-    private boolean mCellIsMobile = false;
+    private boolean mCellIsMoving = false;
     private int mActivePointerId = INVALID_ID;
 
     private boolean mIsMobileScrolling;
@@ -421,7 +421,7 @@ public class DynamicGridView extends GridView {
                 int deltaY = mLastEventY - mDownY;
                 int deltaX = mLastEventX - mDownX;
 
-                if (mCellIsMobile) {
+                if (mCellIsMoving) {
                     mHoverCellCurrentBounds.offsetTo(mHoverCellOriginalBounds.left + deltaX + mTotalOffsetX,
                             mHoverCellOriginalBounds.top + deltaY + mTotalOffsetY);
                     mHoverCell.setBounds(mHoverCellCurrentBounds);
@@ -491,7 +491,7 @@ public class DynamicGridView extends GridView {
                 mSelectedItemBitmapCreationListener.onPostSelectedItemBitmapCreation(selectedView, position, mMobileItemId);
             if (isPostHoneycomb())
                 selectedView.setVisibility(View.INVISIBLE);
-            mCellIsMobile = true;
+            mCellIsMoving = true;
             updateNeighborViewsForId(mMobileItemId);
             if (mDragListener != null) {
                 mDragListener.onDragStarted(position);
@@ -531,8 +531,8 @@ public class DynamicGridView extends GridView {
 
     private void touchEventsEnded() {
         final View mobileView = getViewForId(mMobileItemId);
-        if (mobileView != null && (mCellIsMobile || mIsWaitingForScrollFinish)) {
-            mCellIsMobile = false;
+        if (mobileView != null && (mCellIsMoving || mIsWaitingForScrollFinish)) {
+            mCellIsMoving = false;
             mIsWaitingForScrollFinish = false;
             mIsMobileScrolling = false;
             mActivePointerId = INVALID_ID;
@@ -628,10 +628,10 @@ public class DynamicGridView extends GridView {
 
     private void touchEventsCancelled() {
         View mobileView = getViewForId(mMobileItemId);
-        if (mCellIsMobile) {
+        if (mCellIsMoving) {
             reset(mobileView);
         }
-        mCellIsMobile = false;
+        mCellIsMoving = false;
         mIsMobileScrolling = false;
         mActivePointerId = INVALID_ID;
 
@@ -922,7 +922,7 @@ public class DynamicGridView extends GridView {
          */
         private void isScrollCompleted() {
             if (mCurrentVisibleItemCount > 0 && mCurrentScrollState == SCROLL_STATE_IDLE) {
-                if (mCellIsMobile && mIsMobileScrolling) {
+                if (mCellIsMoving && mIsMobileScrolling) {
                     handleMobileCellScroll();
                 } else if (mIsWaitingForScrollFinish) {
                     touchEventsEnded();
@@ -936,7 +936,7 @@ public class DynamicGridView extends GridView {
          */
         public void checkAndHandleFirstVisibleCellChange() {
             if (mCurrentFirstVisibleItem != mPreviousFirstVisibleItem) {
-                if (mCellIsMobile && mMobileItemId != INVALID_ID) {
+                if (mCellIsMoving && mMobileItemId != INVALID_ID) {
                     updateNeighborViewsForId(mMobileItemId);
                     handleCellSwitch();
                 }
@@ -951,7 +951,7 @@ public class DynamicGridView extends GridView {
             int currentLastVisibleItem = mCurrentFirstVisibleItem + mCurrentVisibleItemCount;
             int previousLastVisibleItem = mPreviousFirstVisibleItem + mPreviousVisibleItemCount;
             if (currentLastVisibleItem != previousLastVisibleItem) {
-                if (mCellIsMobile && mMobileItemId != INVALID_ID) {
+                if (mCellIsMoving && mMobileItemId != INVALID_ID) {
                     updateNeighborViewsForId(mMobileItemId);
                     handleCellSwitch();
                 }

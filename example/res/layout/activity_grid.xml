@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:orientation="vertical"
               android:layout_width="match_parent"
@@ -7,8 +6,12 @@
 
     <org.askerov.dynamicgrid.DynamicGridView
             android:id="@+id/dynamic_grid"
+			android:padding="16dp"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
+			android:columnWidth="100dp"
+			android:verticalSpacing="5dp"
+			android:horizontalSpacing="5dp"
             android:numColumns="@integer/column_count"
             />
 
