@@ -14,28 +14,27 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Message;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Pair;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ListAdapter;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
 
-/**
- * Author: alex askerov
- * Date: 9/6/13
- * Time: 12:31 PM
- */
 public class DynamicGridView extends GridView {
     private static final int INVALID_ID = -1;
 
@@ -95,8 +94,6 @@ public class DynamicGridView extends GridView {
     private DynamicGridModification mCurrentModification;
 
     private OnSelectedItemBitmapCreationListener mSelectedItemBitmapCreationListener;
-
-	private boolean mShouldRunCheckForFolderOrMove;
 
 	public DynamicGridView(Context context) {
         super(context);
@@ -418,11 +415,9 @@ public class DynamicGridView extends GridView {
                 } else if (!isEnabled()) {
                     return false;
                 }
-				mShouldRunCheckForFolderOrMove = false;
 				Log.d("False", "FAAALLLSSEE");
                 break;
             case MotionEvent.ACTION_MOVE:
-				mShouldRunCheckForFolderOrMove = true;
 				Log.d("False", "TRUE");
                 if (mActivePointerId == INVALID_ID) {
                     break;
@@ -462,7 +457,6 @@ public class DynamicGridView extends GridView {
                         mDropListener.onActionDrop();
                     }
                 }
-				mShouldRunCheckForFolderOrMove = false;
 				Log.d("False", "FAAALLLSSEE");
 
                 break;
@@ -474,7 +468,6 @@ public class DynamicGridView extends GridView {
                         mDropListener.onActionDrop();
                     }
                 }
-				mShouldRunCheckForFolderOrMove = false;
 				Log.d("False", "FAAALLLSSEE");
                 break;
             case MotionEvent.ACTION_POINTER_UP:
@@ -511,6 +504,7 @@ public class DynamicGridView extends GridView {
             if (isPostHoneycomb())
                 selectedView.setVisibility(View.INVISIBLE);
             mCellIsMoving = true;
+			new CheckForMove().start();
             updateNeighborViewsForId(mMobileItemId);
             if (mDragListener != null) {
                 mDragListener.onDragStarted(position);
@@ -656,6 +650,7 @@ public class DynamicGridView extends GridView {
     }
 
 	private boolean mShouldMove = false;
+	private View mTargetView;
 
     private void handleCellSwitch() {
         final int deltaY = mLastEventY - mDownY;
@@ -690,50 +685,13 @@ public class DynamicGridView extends GridView {
 			if (targetView != null) {
 				mShouldMove = true;
 				Log.d("Move", "TRUE");
-//			long test = System.currentTimeMillis();
-//			if (test <= (2000 + 15 * 1000)) {
+				mTargetView = targetView;
 //
-//				final int originalPosition = getPositionForView(mobileView);
-//				int targetPosition = getPositionForView(targetView);
-//
-//				if (targetPosition == INVALID_POSITION) {
-//					updateNeighborViewsForId(mMobileItemId);
-//					return;
-//				}
-//				reorderElements(originalPosition, targetPosition);
-//
-//				if (mUndoSupportEnabled) {
-//					mCurrentModification.addTransition(originalPosition, targetPosition);
-//				}
-//
-//				mDownY = mLastEventY;
-//				mDownX = mLastEventX;
-//				mobileView.setVisibility(View.VISIBLE);
-//				if (isPostHoneycomb()) {
-//					targetView.setVisibility(View.INVISIBLE);
-//				}
-//				updateNeighborViewsForId(mMobileItemId);
-//				final ViewTreeObserver observer = getViewTreeObserver();
-//				final int finalTargetPosition = targetPosition;
-//				if (isPostHoneycomb() && observer != null) {
-//					observer.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
-//						@Override
-//						public boolean onPreDraw() {
-//							observer.removeOnPreDrawListener(this);
-//							mTotalOffsetY += deltaY;
-//							mTotalOffsetX += deltaX;
-//							animateReorder(originalPosition, finalTargetPosition);
-//							return true;
-//						}
-//					});
-//				} else {
-//					mTotalOffsetY += deltaY;
-//					mTotalOffsetX += deltaX;
-//				}
-//			}
+
 			} else {
 				mShouldMove = false;
 				Log.d("Move", "FALSE");
+				mTargetView = null;
 			}
 		}
     }
@@ -745,34 +703,83 @@ public class DynamicGridView extends GridView {
 			do {
 				try {
 					Thread.sleep(2000);
-					if (mShouldMove && mShouldRunCheckForFolderOrMove) {
+					if (mShouldMove) {
 						Log.d("Move", "MOOOOOVE");
+						moveHandler.dispatchMessage(new Message());
 					}
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-			} while (mShouldMove && mShouldRunCheckForFolderOrMove);
+			} while (mCellIsMoving);
 		}
 	}
 
-//	private boolean checkBounds(Point targetColumnRowPair, Point mobileColumnRowPair, int deltaXTotal, View view, int deltaYTotal) {
-//		return aboveRight(targetColumnRowPair, mobileColumnRowPair)
-//				&& deltaYTotal < view.getBottom() && deltaXTotal > view.getLeft()
-//				|| aboveLeft(targetColumnRowPair, mobileColumnRowPair)
-//				&& deltaYTotal < view.getBottom() && deltaXTotal < view.getRight()
-//				|| belowRight(targetColumnRowPair, mobileColumnRowPair)
-//				&& deltaYTotal > view.getTop() && deltaXTotal > view.getLeft()
-//				|| belowLeft(targetColumnRowPair, mobileColumnRowPair)
-//				&& deltaYTotal > view.getTop() && deltaXTotal < view.getRight()
-//				|| above(targetColumnRowPair, mobileColumnRowPair)
-//				&& deltaYTotal < view.getBottom() - mOverlapIfSwitchStraightLine
-//				|| below(targetColumnRowPair, mobileColumnRowPair)
-//				&& deltaYTotal > view.getTop() + mOverlapIfSwitchStraightLine
-//				|| right(targetColumnRowPair, mobileColumnRowPair)
-//				&& deltaXTotal > view.getLeft() + mOverlapIfSwitchStraightLine
-//				|| left(targetColumnRowPair, mobileColumnRowPair)
-//				&& deltaXTotal < view.getRight() - mOverlapIfSwitchStraightLine;
-//	}
+	Handler moveHandler = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
+			super.handleMessage(msg);
+			moveCell();
+		}
+	};
+
+	private void moveCell() {
+		if (mTargetView == null) {
+			return;
+		}
+
+		post(new Runnable() {
+			@Override
+			public void run() {
+				final int deltaY = mLastEventY - mDownY;
+				final int deltaX = mLastEventX - mDownX;
+
+				View mobileView = getViewForId(mMobileItemId);
+
+				if (mobileView == null) {
+					return;
+				}
+
+				final int originalPosition = getPositionForView(mobileView);
+				int targetPosition = getPositionForView(mTargetView);
+
+				if (targetPosition == INVALID_POSITION) {
+					updateNeighborViewsForId(mMobileItemId);
+					return;
+				}
+				reorderElements(originalPosition, targetPosition);
+
+				if (mUndoSupportEnabled) {
+					mCurrentModification.addTransition(originalPosition, targetPosition);
+				}
+
+				mDownY = mLastEventY;
+				mDownX = mLastEventX;
+				mobileView.setVisibility(View.VISIBLE);
+				if (isPostHoneycomb()) {
+					mTargetView.setVisibility(View.INVISIBLE);
+				}
+				updateNeighborViewsForId(mMobileItemId);
+				final ViewTreeObserver observer = getViewTreeObserver();
+				final int finalTargetPosition = targetPosition;
+				if (isPostHoneycomb() && observer != null) {
+					observer.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+						@Override
+						public boolean onPreDraw() {
+							observer.removeOnPreDrawListener(this);
+							mTotalOffsetY += deltaY;
+							mTotalOffsetX += deltaX;
+							animateReorder(originalPosition, finalTargetPosition);
+							return true;
+						}
+					});
+				} else {
+					mTotalOffsetY += deltaY;
+					mTotalOffsetX += deltaX;
+				}
+			}
+		});
+
+	}
 
 	private boolean checkBounds(Point targetColumnRowPair, Point mobileColumnRowPair, int deltaXTotal, View view, int deltaYTotal) {
 		return aboveRight(targetColumnRowPair, mobileColumnRowPair)
