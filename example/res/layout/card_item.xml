@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+			  android:orientation="vertical"
+			  android:layout_width="100dp"
+			  android:background="@android:color/white"
+			  android:layout_height="100dp">
+
+	<ImageView
+			android:id="@+id/product_card_image"
+			android:layout_width="100dp"
+			android:scaleType="centerCrop"
+			android:layout_height="78dp"/>
+
+	<TextView
+			android:id="@+id/product_card_text"
+			android:layout_width="match_parent"
+			android:textColor="@android:color/black"
+			android:layout_height="22dp" />
+
+</LinearLayout>
