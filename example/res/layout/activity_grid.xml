@@ -1,18 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent">
+			  android:id="@+id/parentLinearLayoutView"
+			  android:orientation="vertical"
+			  android:layout_width="match_parent"
+			  android:layout_height="match_parent"
+			  android:weightSum="2">
 
-    <org.askerov.dynamicgrid.DynamicGridView
-            android:id="@+id/dynamic_grid"
+	<org.askerov.dynamicgrid.DynamicGridView
+			android:id="@+id/dynamic_grid1"
 			android:padding="16dp"
-            android:layout_height="wrap_content"
-            android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:layout_width="match_parent"
 			android:columnWidth="100dp"
 			android:verticalSpacing="5dp"
+			android:layout_weight="1"
 			android:horizontalSpacing="5dp"
-            android:numColumns="@integer/column_count"
-            />
+			android:numColumns="@integer/column_count"
+			/>
+
+	<org.askerov.dynamicgrid.DynamicGridView
+			android:id="@+id/dynamic_grid2"
+			android:padding="16dp"
+			android:layout_height="match_parent"
+			android:layout_width="match_parent"
+			android:columnWidth="100dp"
+			android:layout_weight="1"
+			android:verticalSpacing="5dp"
+			android:horizontalSpacing="5dp"
+			android:numColumns="@integer/column_count"
+			/>
 
 </LinearLayout>

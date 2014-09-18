@@ -4,25 +4,41 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Arrays;
 import org.askerov.dynamicgrid.DynamicGridView;
+import org.askerov.dynamicgrid.OnDragListenerGridView;
 
 public class GridActivity extends Activity {
 
     private static final String TAG = GridActivity.class.getName();
 
-    private DynamicGridView gridView;
+    private DynamicGridView gridView1;
+    private DynamicGridView gridView2;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_grid);
-        gridView = (DynamicGridView) findViewById(R.id.dynamic_grid);
-        gridView.setAdapter(new CheeseDynamicAdapter(this,
+        gridView1 = (DynamicGridView) findViewById(R.id.dynamic_grid1);
+
+		LinearLayout linearLayout = (LinearLayout) findViewById(R.id.parentLinearLayoutView);
+
+
+        gridView2 = (DynamicGridView) findViewById(R.id.dynamic_grid2);
+        gridView1.setAdapter(new CheeseDynamicAdapter(this,
                 new ArrayList<String>(Arrays.asList(Cheeses.sCheeseStrings)),
                 getResources().getInteger(R.integer.column_count)));
+		gridView2.setAdapter(new CheeseDynamicAdapter(this,
+                new ArrayList<String>(Arrays.asList(Cheeses.sCheeseStrings)).subList(0, 5),
+                getResources().getInteger(R.integer.column_count)));
+
+
+		gridView1.setParentView(linearLayout);
+		gridView2.setParentView(linearLayout);
+
 //        add callback to stop edit mode if needed
 //        gridView.setOnDropListener(new DynamicGridView.OnDropListener()
 //        {
@@ -32,26 +48,33 @@ public class GridActivity extends Activity {
 //                gridView.stopEditMode();
 //            }
 //        });
-        gridView.setOnDragListener(new DynamicGridView.OnDragListener() {
-            @Override
-            public void onDragStarted(int position) {
+        gridView1.setOnDragListener(new OnDragListenerGridView() {
+			@Override
+			public void onDragStarted(int position) {
 //                Log.d(TAG, "drag started at position " + position);
-            }
+			}
 
-            @Override
-            public void onDragPositionsChanged(int oldPosition, int newPosition) {
+			@Override
+			public void onDragPositionsChanged(int oldPosition, int newPosition) {
 //                Log.d(TAG, String.format("drag item position changed from %d to %d", oldPosition, newPosition));
-            }
-        });
-        gridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+			}
+		});
+        gridView1.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                gridView.startEditMode(position);
+                gridView1.startEditMode(position);
+                return true;
+            }
+        });
+		gridView2.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                gridView2.startEditMode(position);
                 return true;
             }
         });
 
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        gridView1.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Toast.makeText(GridActivity.this, parent.getAdapter().getItem(position).toString(),
@@ -62,8 +85,8 @@ public class GridActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (gridView.isEditMode()) {
-            gridView.stopEditMode();
+        if (gridView1.isEditMode()) {
+            gridView1.stopEditMode();
         } else {
             super.onBackPressed();
         }
