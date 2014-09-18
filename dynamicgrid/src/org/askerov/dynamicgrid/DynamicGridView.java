@@ -7,6 +7,7 @@ import android.animation.ObjectAnimator;
 import android.animation.TypeEvaluator;
 import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
+import android.content.ClipData;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -29,7 +30,6 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ListAdapter;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -100,6 +100,7 @@ public class DynamicGridView extends GridView {
     private DynamicGridModification mCurrentModification;
 
     private OnSelectedItemBitmapCreationListener mSelectedItemBitmapCreationListener;
+	private DragDropController mDragDropController;
 
 	public DynamicGridView(Context context) {
         super(context);
@@ -120,8 +121,9 @@ public class DynamicGridView extends GridView {
         this.mDropListener = dropListener;
     }
 
-    public void setOnDragListener(OnDragListenerGridView dragListener) {
+    public void setOnDragListener(OnDragListenerGridView dragListener, DragDropController onDragListener) {
         this.mDragListener = dragListener;
+		this.mDragDropController = onDragListener;
     }
 
     /**
@@ -139,8 +141,8 @@ public class DynamicGridView extends GridView {
     public void startEditMode(int position) {
         if (!mIsEditModeEnabled)
             return;
-        requestDisallowInterceptTouchEvent(true);
-        if (isPostHoneycomb() && mWobbleInEditMode) {
+//        requestDisallowInterceptTouchEvent(true);
+        if (mWobbleInEditMode) {
 			startWobbleAnimation();
 		}
         if (position != -1 && mDragListener != null) {
@@ -155,7 +157,7 @@ public class DynamicGridView extends GridView {
     public void stopEditMode() {
         mIsEditMode = false;
         requestDisallowInterceptTouchEvent(false);
-        if (isPostHoneycomb() && mWobbleInEditMode)
+        if (mWobbleInEditMode)
             stopWobble(true);
         if (mEditModeChangeListener != null)
             mEditModeChangeListener.onEditModeChanged(false);
@@ -427,29 +429,27 @@ public class DynamicGridView extends GridView {
                 }
                 break;
             case MotionEvent.ACTION_MOVE:
-                if (mActivePointerId == INVALID_ID) {
-                    break;
-                }
-
-                int pointerIndex = event.findPointerIndex(mActivePointerId);
-
-                mLastEventY = (int) event.getY(pointerIndex);
-                mLastEventX = (int) event.getX(pointerIndex);
-                int deltaY = mLastEventY - mDownY;
-                int deltaX = mLastEventX - mDownX;
-
-                if (mCellIsMoving) {
-                    mHoverCellCurrentBounds.offsetTo(mHoverCellOriginalBounds.left + deltaX + mTotalOffsetX,
-                            mHoverCellOriginalBounds.top + deltaY + mTotalOffsetY);
-                    mHoverCell.setBounds(mHoverCellCurrentBounds);
-                    invalidate();
-                    handleCellSwitch();
-                    mIsMobileScrolling = false;
-                    handleMobileCellScroll();
-                    return false;
-                }
-
-
+//                if (mActivePointerId == INVALID_ID) {
+//                    break;
+//                }
+//
+//                int pointerIndex = event.findPointerIndex(mActivePointerId);
+//
+//                mLastEventY = (int) event.getY(pointerIndex);
+//                mLastEventX = (int) event.getX(pointerIndex);
+//                int deltaY = mLastEventY - mDownY;
+//                int deltaX = mLastEventX - mDownX;
+//
+//                if (mCellIsMoving) {
+//                    mHoverCellCurrentBounds.offsetTo(mHoverCellOriginalBounds.left + deltaX + mTotalOffsetX,
+//                            mHoverCellOriginalBounds.top + deltaY + mTotalOffsetY);
+//                    mHoverCell.setBounds(mHoverCellCurrentBounds);
+//                    invalidate();
+//                    handleCellSwitch();
+//                    mIsMobileScrolling = false;
+//                    handleMobileCellScroll();
+//                    return false;
+//                }
 
                 break;
             case MotionEvent.ACTION_UP:
@@ -482,12 +482,12 @@ public class DynamicGridView extends GridView {
                  * the movement of the hover cell has ended, then the dragging event
                  * ends and the hover cell is animated to its corresponding position
                  * in the listview. */
-                pointerIndex = (event.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >>
-                        MotionEvent.ACTION_POINTER_INDEX_SHIFT;
-                final int pointerId = event.getPointerId(pointerIndex);
-                if (pointerId == mActivePointerId) {
-                    touchEventsEnded();
-                }
+//                pointerIndex = (event.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >>
+//                        MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+//                final int pointerId = event.getPointerId(pointerIndex);
+//                if (pointerId == mActivePointerId) {
+//                    touchEventsEnded();
+//                }
                 break;
             default:
                 break;
@@ -503,13 +503,23 @@ public class DynamicGridView extends GridView {
         View selectedView = getChildAt(itemNum);
         if (selectedView != null) {
             mMobileItemId = getAdapter().getItemId(position);
-            if (mSelectedItemBitmapCreationListener != null)
-                mSelectedItemBitmapCreationListener.onPreSelectedItemBitmapCreation(selectedView, position, mMobileItemId);
-            mHoverCell = getAndAddHoverView(selectedView);
-            if (mSelectedItemBitmapCreationListener != null)
-                mSelectedItemBitmapCreationListener.onPostSelectedItemBitmapCreation(selectedView, position, mMobileItemId);
-            if (isPostHoneycomb())
-                selectedView.setVisibility(View.INVISIBLE);
+//            if (mSelectedItemBitmapCreationListener != null) {
+//                mSelectedItemBitmapCreationListener.onPreSelectedItemBitmapCreation(selectedView, position, mMobileItemId);
+//			}
+//            mHoverCell = getAndAddHoverView(selectedView);
+//            if (mSelectedItemBitmapCreationListener != null) {
+//				mSelectedItemBitmapCreationListener.onPostSelectedItemBitmapCreation(selectedView, position, mMobileItemId);
+//			}
+
+			setOnDragListener(mDragDropController);
+			ClipData data = ClipData.newPlainText("", "");
+			View.DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(selectedView);
+			selectedView.startDrag(data, shadowBuilder, selectedView, 0);
+//			selectedView.
+			selectedView.setVisibility(View.INVISIBLE);
+
+//            if (isPostHoneycomb())
+//                selectedView.setVisibility(View.INVISIBLE);
             mCellIsMoving = true;
 			new CheckForMove().start();
             updateNeighborViewsForId(mMobileItemId);
@@ -565,7 +575,7 @@ public class DynamicGridView extends GridView {
                 return;
             }
 
-            mHoverCellCurrentBounds.offsetTo(mobileView.getLeft(), mobileView.getTop());
+//            mHoverCellCurrentBounds.offsetTo(mobileView.getLeft(), mobileView.getTop());
 
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB) {
                 animateBounds(mobileView);
@@ -595,36 +605,36 @@ public class DynamicGridView extends GridView {
         };
 
 
-        ObjectAnimator hoverViewAnimator = ObjectAnimator.ofObject(mHoverCell, "bounds",
-                sBoundEvaluator, mHoverCellCurrentBounds);
-        hoverViewAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                invalidate();
-            }
-        });
-        hoverViewAnimator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationStart(Animator animation) {
-                mHoverAnimation = true;
-                updateEnableState();
-            }
-
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                mHoverAnimation = false;
-                updateEnableState();
-                reset(mobileView);
-            }
-        });
-        hoverViewAnimator.start();
+//        ObjectAnimator hoverViewAnimator = ObjectAnimator.ofObject(mHoverCell, "bounds",
+//                sBoundEvaluator, mHoverCellCurrentBounds);
+//        hoverViewAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+//            @Override
+//            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+//                invalidate();
+//            }
+//        });
+//        hoverViewAnimator.addListener(new AnimatorListenerAdapter() {
+//            @Override
+//            public void onAnimationStart(Animator animation) {
+//                mHoverAnimation = true;
+//                updateEnableState();
+//            }
+//
+//            @Override
+//            public void onAnimationEnd(Animator animation) {
+//                mHoverAnimation = false;
+//                updateEnableState();
+//                reset(mobileView);
+//            }
+//        });
+//        hoverViewAnimator.start();
     }
 
     private void reset(View mobileView) {
         idList.clear();
         mMobileItemId = INVALID_ID;
 		if(mobileView != null) {
-			mobileView.setVisibility(View.VISIBLE);
+//			mobileView.setVisibility(View.VISIBLE);
 		}
         mHoverCell = null;
         if (!mIsEditMode && isPostHoneycomb() && mWobbleInEditMode)
@@ -678,8 +688,6 @@ public class DynamicGridView extends GridView {
 			idList.remove(mMobileItemId);
 			mParentView.addView(mobileView);
 			invalidate();
-
-
 
 //			Point mobileColumnRowPair = getColumnAndRowForView(mobileView);
 //			for (Long id : idList) {
@@ -1063,7 +1071,7 @@ public class DynamicGridView extends GridView {
             if (mCurrentFirstVisibleItem != mPreviousFirstVisibleItem) {
                 if (mCellIsMoving && mMobileItemId != INVALID_ID) {
                     updateNeighborViewsForId(mMobileItemId);
-                    handleCellSwitch();
+//                    handleCellSwitch();
                 }
             }
         }
@@ -1078,7 +1086,7 @@ public class DynamicGridView extends GridView {
             if (currentLastVisibleItem != previousLastVisibleItem) {
                 if (mCellIsMoving && mMobileItemId != INVALID_ID) {
                     updateNeighborViewsForId(mMobileItemId);
-                    handleCellSwitch();
+//                    handleCellSwitch();
                 }
             }
         }

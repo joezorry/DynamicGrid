@@ -8,6 +8,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Arrays;
+import org.askerov.dynamicgrid.DragDropController;
 import org.askerov.dynamicgrid.DynamicGridView;
 import org.askerov.dynamicgrid.OnDragListenerGridView;
 
@@ -17,8 +18,9 @@ public class GridActivity extends Activity {
 
     private DynamicGridView gridView1;
     private DynamicGridView gridView2;
+	private DragDropController mDragDropController;
 
-    @Override
+	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_grid);
@@ -48,6 +50,9 @@ public class GridActivity extends Activity {
 //                gridView.stopEditMode();
 //            }
 //        });
+
+		mDragDropController = new DragDropController();
+
         gridView1.setOnDragListener(new OnDragListenerGridView() {
 			@Override
 			public void onDragStarted(int position) {
@@ -58,7 +63,22 @@ public class GridActivity extends Activity {
 			public void onDragPositionsChanged(int oldPosition, int newPosition) {
 //                Log.d(TAG, String.format("drag item position changed from %d to %d", oldPosition, newPosition));
 			}
-		});
+		}, new DragDropController());
+
+		gridView2.setOnDragListener(new OnDragListenerGridView() {
+			@Override
+			public void onDragStarted(int position) {
+//                Log.d(TAG, "drag started at position " + position);
+			}
+
+			@Override
+			public void onDragPositionsChanged(int oldPosition, int newPosition) {
+//                Log.d(TAG, String.format("drag item position changed from %d to %d", oldPosition, newPosition));
+			}
+		}, new DragDropController());
+
+
+
         gridView1.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
