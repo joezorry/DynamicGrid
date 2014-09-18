@@ -415,10 +415,8 @@ public class DynamicGridView extends GridView {
                 } else if (!isEnabled()) {
                     return false;
                 }
-				Log.d("False", "FAAALLLSSEE");
                 break;
             case MotionEvent.ACTION_MOVE:
-				Log.d("False", "TRUE");
                 if (mActivePointerId == INVALID_ID) {
                     break;
                 }
@@ -457,8 +455,6 @@ public class DynamicGridView extends GridView {
                         mDropListener.onActionDrop();
                     }
                 }
-				Log.d("False", "FAAALLLSSEE");
-
                 break;
             case MotionEvent.ACTION_CANCEL:
                 touchEventsCancelled();
@@ -468,7 +464,6 @@ public class DynamicGridView extends GridView {
                         mDropListener.onActionDrop();
                     }
                 }
-				Log.d("False", "FAAALLLSSEE");
                 break;
             case MotionEvent.ACTION_POINTER_UP:
                 /* If a multitouch event took place and the original touch dictating
@@ -671,7 +666,6 @@ public class DynamicGridView extends GridView {
 					Point targetColumnRowPair = getColumnAndRowForView(view);
 
 					if (checkBounds(targetColumnRowPair, mobileColumnRowPair, deltaXTotal, view, deltaYTotal)) {
-
 						float xDiff = Math.abs(DynamicGridUtils.getViewX(view) - DynamicGridUtils.getViewX(mobileView));
 						float yDiff = Math.abs(DynamicGridUtils.getViewY(view) - DynamicGridUtils.getViewY(mobileView));
 						if (xDiff >= vX && yDiff >= vY) {
@@ -682,15 +676,14 @@ public class DynamicGridView extends GridView {
 					}
 				}
 			}
+
 			if (targetView != null) {
 				mShouldMove = true;
-				Log.d("Move", "TRUE");
+//				Log.d("Move", "TRUE");
 				mTargetView = targetView;
-//
-
 			} else {
 				mShouldMove = false;
-				Log.d("Move", "FALSE");
+//				Log.d("Move", "FALSE");
 				mTargetView = null;
 			}
 		}
@@ -718,9 +711,22 @@ public class DynamicGridView extends GridView {
 		@Override
 		public void handleMessage(Message msg) {
 			super.handleMessage(msg);
-			moveCell();
+//			moveCell();
+			checkForAction();
 		}
 	};
+
+	private void checkForAction() {
+		post(new Runnable() {
+			@Override
+			public void run() {
+				View targetView = mTargetView;
+				if (targetView != null) {
+					checkFolderBounds(targetView);
+				}
+			}
+		});
+	}
 
 	private void moveCell() {
 		if (mTargetView == null) {
@@ -778,7 +784,6 @@ public class DynamicGridView extends GridView {
 				}
 			}
 		});
-
 	}
 
 	private boolean checkBounds(Point targetColumnRowPair, Point mobileColumnRowPair, int deltaXTotal, View view, int deltaYTotal) {
@@ -798,6 +803,29 @@ public class DynamicGridView extends GridView {
 				&& deltaXTotal > view.getLeft() + mOverlapIfSwitchStraightLine
 				|| left(targetColumnRowPair, mobileColumnRowPair)
 				&& deltaXTotal < view.getRight() - mOverlapIfSwitchStraightLine;
+	}
+
+	private boolean checkFolderBounds(View targetView) {
+		int targetWidth = targetView.getWidth();
+		int targetHeight = targetView.getHeight();
+
+		int centreX = (int) targetView.getX() + targetView.getWidth()  / 2;
+		int centreY = (int) targetView.getY() + targetView.getHeight() / 2;
+
+		int leftRect = centreX - targetWidth / 4;
+		int topRect = centreY - targetHeight / 4;
+		int rightRect = centreX + targetHeight / 4;
+		int bottomRect = centreY + targetHeight / 4;
+
+		Rect targetRect = new Rect(leftRect, topRect,
+				rightRect, bottomRect);
+
+		if (targetRect.contains(mLastEventX, mLastEventY, mLastEventX, mLastEventY)) {
+			Log.d("hit", "HIIIIT");
+		}
+
+
+		return true;
 	}
 
     private boolean belowLeft(Point targetColumnRowPair, Point mobileColumnRowPair) {
@@ -1064,4 +1092,3 @@ public class DynamicGridView extends GridView {
         }
     }
 }
-
